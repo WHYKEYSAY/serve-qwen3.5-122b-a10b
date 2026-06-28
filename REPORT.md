@@ -1,7 +1,7 @@
 # qwen3.5-122b-a10b (MTP) — the daily-driver reasoning baseline
 
 `Qwen3.5-122B-A10B` MoE (122B total / ~10B active) at **UD-IQ4_XS (58 GB, 3 shards)** + native **MTP self-speculation**.
-The standing daily-driver on `keyingd:8001`. **Decode ~28–34 tok/s, workload-dependent** (MTP draft-accept varies).
+Served on `localhost:8001`. **Decode ~28–34 tok/s, workload-dependent** (MTP draft-accept varies).
 
 ## Decode throughput (7 workloads)
 | Workload | decode tok/s (production ncm14/ctx8192/MTP) |
@@ -15,7 +15,7 @@ The standing daily-driver on `keyingd:8001`. **Decode ~28–34 tok/s, workload-d
 | Translation (multilingual) | ~24–26 |
 | **Average** | **~30.6** (prefill ~35–52) |
 
-> Cross-checks Kecheng's independent `keying-deep.md` (~30). The much-quoted "37" is the **code/high-draft-accept peak**
+> Independently cross-checked (~30). The much-quoted "37" is the **code/high-draft-accept peak**
 > (93% MTP accept); the single "avg" hides a real 24→34 spread. **Report per-workload, not one number.**
 
 ## Serving configuration
@@ -41,7 +41,7 @@ The standing daily-driver on `keyingd:8001`. **Decode ~28–34 tok/s, workload-d
 That MTP assist is why 122B (~30) beats dense Llama-70B (~24) despite being larger — the active-param + speculation
 advantage. Same offload wall as every >48 GB model here.
 
-## Failures → the stability root-cause (the §E item)
+## Failures → the stability root-cause
 **122B crashes under sustained continuous load** (reproduced across 3 runs):
 - **Root cause: the 5080 (16 GB) sits at ~15.8/16 GB — only ~445 MiB free, INDEPENDENT of ctx** (445 MiB at ctx4096,
   455 at ctx8192). So the headroom shortage is **fixed weight allocation** from `--tensor-split 34,12` giving the
@@ -60,7 +60,7 @@ advantage. Same offload wall as every >48 GB model here.
 ## Verdict
 ✅ **Solid daily-driver reasoning model, ~30 tok/s** (MTP shines on code → ~34). One real stability caveat under
 **sustained** load, fully root-caused (5080 weight-share starves KV headroom) with a clear tensor-split fix for
-Kecheng. **Disk: KEPT** (one of the two keepers). 6/7 workloads clean; the 7th blocked by a real hardware-edge OOM,
+Kecheng. **Disk: KEPT.** 6/7 workloads clean; the 7th blocked by a real hardware-edge OOM,
 not a measurement gap.
 
-_2026-06-27 · 3 benchmark runs + stability root-cause + restored prod config · keyingd · cross-checks keying-deep.md._
+_2026-06-27 · 3 benchmark runs + stability root-cause + restored prod config · the test rig · independently cross-checked._
